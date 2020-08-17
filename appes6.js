@@ -48,7 +48,45 @@ class UI {
 }
 
 // -----------------------------------------------------
+class Store {
+    static getBooks() {
+        let books;
+        if (localStorage.getItem('books') === null) {
+            books = [];
+        } else {
+            books = JSON.parse(localStorage.getItem('books'));
+        }
+        return books;
+    }
+
+    static displayBooks() {
+        const books = Store.getBooks();
+        books.forEach((book) => {
+            const ui = new UI();
+            ui.addBookToList(book);
+        });
+    }
+
+    static addBook(book) {
+        const books = Store.getBooks();
+        books.push(book);
+        localStorage.setItem('books', JSON.stringify(books));
+    }
+    static removeBook(isbn) {
+        const books = Store.getBooks();
+        books.forEach((book, i) => {
+            if (book.isbn === isbn) {
+                books.splice(i, 1);
+            }
+        });
+        localStorage.setItem('books', JSON.stringify(books));
+    }
+}
+
+// -----------------------------------------------------
 // Event listeners
+document.addEventListener('DOMContentLoaded', Store.displayBooks);
+
 document.getElementById('book-form').addEventListener('submit', function (e) {
     const title = document.getElementById('title').value;
     const author = document.getElementById('author').value;
@@ -65,6 +103,7 @@ document.getElementById('book-form').addEventListener('submit', function (e) {
         ui.showAlert('Please fill the fields', 'error');
     } else {
         ui.addBookToList(book);
+        Store.addBook(book);
         ui.showAlert('Book added', 'success');
 
         // Clear fields
@@ -74,11 +113,14 @@ document.getElementById('book-form').addEventListener('submit', function (e) {
     e.preventDefault();
 });
 
-// Event listener - delete button
+// Event listener - DELETE BUTTON
 document.getElementById('book-list').addEventListener('click', function (e) {
     if (e.target.className === 'delete') {
         const ui = new UI();
         ui.deleteBook(e.target);
+        Store.removeBook(
+            e.target.parentElement.previousElementSibling.textContent
+        );
         ui.showAlert('Book removed', 'success');
         e.preventDefault();
     }
